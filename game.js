@@ -5,6 +5,22 @@ const statusNode = document.getElementById("status");
 const tileSize = 24;
 const chunkSize = 16;
 const loadRadius = 2;
+const spawnCooldownMs = 1400;
+const maxEnemiesPerDimension = 14;
+const maxFrameTimeSeconds = 0.033;
+const zombieSpawnProbability = 0.65;
+const creeperFlashThreshold = 0.6;
+const minEnemySpawnRadius = 8;
+const enemySpawnRadiusRange = 9;
+const zombieDamagePerSecond = 13;
+const creeperExplosionDamage = 33;
+const hashPrimeX = 374761393;
+const hashPrimeY = 668265263;
+const hashPrimeSeed = 362437;
+const hashShiftA = 13;
+const hashPrimeMix = 1274126177;
+const hashShiftB = 16;
+const dimensionSeeds = { overworld: 1, nether: 2, end: 3 };
 
 const dimensions = {
   overworld: {
@@ -37,7 +53,7 @@ const player = {
   x: 0,
   y: 0,
   health: 100,
-  speed: 5.5,
+  speedTilesPerSecond: 5.5,
   dimension: "overworld",
 };
 
@@ -46,9 +62,9 @@ const enemies = [];
 let lastSpawn = 0;
 
 function hash(x, y, dimSeed) {
-  let n = x * 374761393 + y * 668265263 + dimSeed * 362437;
-  n = (n ^ (n >>> 13)) * 1274126177;
-  return (n ^ (n >>> 16)) >>> 0;
+  let n = x * hashPrimeX + y * hashPrimeY + dimSeed * hashPrimeSeed;
+  n = (n ^ (n >>> hashShiftA)) * hashPrimeMix;
+  return (n ^ (n >>> hashShiftB)) >>> 0;
 }
 
 function keyForChunk(cx, cy) {
@@ -56,7 +72,7 @@ function keyForChunk(cx, cy) {
 }
 
 function generateChunk(dimension, cx, cy) {
-  const dimSeed = dimension === "overworld" ? 1 : dimension === "nether" ? 2 : 3;
+  const dimSeed = dimensionSeeds[dimension];
   const data = new Array(chunkSize * chunkSize);
 
   for (let y = 0; y < chunkSize; y += 1) {
@@ -103,19 +119,19 @@ function getBlock(x, y) {
 }
 
 function spawnEnemy(timeMs) {
-  if (timeMs - lastSpawn < 1400) {
+  if (timeMs - lastSpawn < spawnCooldownMs) {
     return;
   }
 
   const sameDimEnemies = enemies.filter((enemy) => enemy.dimension === player.dimension);
-  if (sameDimEnemies.length >= 14) {
+  if (sameDimEnemies.length >= maxEnemiesPerDimension) {
     return;
   }
 
   lastSpawn = timeMs;
   const angle = Math.random() * Math.PI * 2;
-  const radius = 8 + Math.random() * 9;
-  const type = Math.random() < 0.65 ? "zombie" : "creeper";
+  const radius = minEnemySpawnRadius + Math.random() * enemySpawnRadiusRange;
+  const type = Math.random() < zombieSpawnProbability ? "zombie" : "creeper";
 
   enemies.push({
     type,
@@ -137,8 +153,8 @@ function updatePlayer(dt) {
 
   if (dx !== 0 || dy !== 0) {
     const len = Math.hypot(dx, dy);
-    player.x += (dx / len) * player.speed * dt;
-    player.y += (dy / len) * player.speed * dt;
+    player.x += (dx / len) * player.speedTilesPerSecond * dt;
+    player.y += (dy / len) * player.speedTilesPerSecond * dt;
   }
 }
 
@@ -151,20 +167,21 @@ function updateEnemies(dt) {
     const speed = enemy.type === "zombie" ? 1.75 : 2.1;
     const dx = player.x - enemy.x;
     const dy = player.y - enemy.y;
-    const dist = Math.hypot(dx, dy) || 1;
+    const dist = Math.hypot(dx, dy);
+    const safeDist = dist || 1;
 
-    enemy.x += (dx / dist) * speed * dt;
-    enemy.y += (dy / dist) * speed * dt;
+    enemy.x += (dx / safeDist) * speed * dt;
+    enemy.y += (dy / safeDist) * speed * dt;
 
     if (enemy.type === "zombie" && dist < 0.8) {
-      player.health = Math.max(0, player.health - 13 * dt);
+      player.health = Math.max(0, player.health - zombieDamagePerSecond * dt);
     }
 
     if (enemy.type === "creeper") {
       if (dist < 1.2) {
         enemy.fuse += dt;
         if (enemy.fuse >= 1.25) {
-          player.health = Math.max(0, player.health - 33);
+          player.health = Math.max(0, player.health - creeperExplosionDamage);
           enemy.x += (Math.random() - 0.5) * 20;
           enemy.y += (Math.random() - 0.5) * 20;
           enemy.fuse = 0;
@@ -218,7 +235,7 @@ function renderEntities() {
       ctx.fillStyle = "#16a34a";
       ctx.strokeStyle = "#052e16";
     } else {
-      const flash = enemy.fuse > 0.6 ? 255 : 0;
+      const flash = enemy.fuse > creeperFlashThreshold ? 255 : 0;
       ctx.fillStyle = `rgb(${flash}, 255, ${flash})`;
       ctx.strokeStyle = "#14532d";
     }
@@ -263,7 +280,7 @@ function resizeCanvas() {
 
 let lastTime = performance.now();
 function tick(now) {
-  const dt = Math.min(0.033, (now - lastTime) / 1000);
+  const dt = Math.min(maxFrameTimeSeconds, (now - lastTime) / 1000);
   lastTime = now;
 
   if (player.health <= 0) {

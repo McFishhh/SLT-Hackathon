@@ -12,7 +12,7 @@ A lightweight browser-based Minecraft-style prototype.
 
 ## Run
 
-Open `/home/runner/work/SLT-Hackathon/SLT-Hackathon/index.html` in a browser.
+Open `index.html` in a browser.
 
 ### Controls
 
