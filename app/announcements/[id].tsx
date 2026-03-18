@@ -1,13 +1,16 @@
 import { useLocalSearchParams } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
+import { useMemo } from "react";
 
 import { Screen } from "@/components/Screen";
+import { availableTags } from "@/data/tagOptions";
 import { theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
 
 export default function AnnouncementDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { state } = useAppContext();
+  const tagLabelMap = useMemo(() => new Map(availableTags.map((tag) => [tag.id, tag.label])), []);
 
   const announcement = state.announcements.find((item) => item.id === id);
 
@@ -33,7 +36,7 @@ export default function AnnouncementDetailScreen() {
         <View style={styles.tagRow}>
           {announcement.tags.map((tag) => (
             <Text key={tag} style={styles.tagChip}>
-              {tag}
+              {tagLabelMap.get(tag) ?? tag}
             </Text>
           ))}
         </View>

@@ -2,7 +2,11 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfi
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 
 import { firebaseAuth, firebaseDb } from "@/lib/firebase";
-import { UserLoginInput, UserProfile, UserRegistrationInput } from "@/types";
+import { TagId, UserLoginInput, UserProfile, UserRegistrationInput } from "@/types";
+
+function normalizeTagIds(tags: TagId[]): TagId[] {
+  return Array.from(new Set(tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean)));
+}
 
 export const authService = {
   async registerUser(input: UserRegistrationInput): Promise<UserProfile> {
@@ -17,7 +21,7 @@ export const authService = {
       displayName: input.displayName,
       email: input.email.trim(),
       role: input.role,
-      interests: input.interests
+      interests: normalizeTagIds(input.interests)
     };
 
     await setDoc(doc(firebaseDb, "users", credentials.user.uid), {
@@ -47,7 +51,7 @@ export const authService = {
       displayName: userProfile.displayName,
       email: userProfile.email,
       role: userProfile.role,
-      interests: userProfile.interests ?? []
+      interests: normalizeTagIds(userProfile.interests ?? [])
     };
   }
 };

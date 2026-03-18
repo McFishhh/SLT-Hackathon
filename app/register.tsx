@@ -9,7 +9,7 @@ import { availableTags, roleDescriptions } from "@/data/tagOptions";
 import { theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
 import { authService } from "@/services/authService";
-import { UserRole } from "@/types";
+import { TagId, UserRole } from "@/types";
 
 export default function RegisterScreen() {
   const { setCurrentUser, setLoading, state } = useAppContext();
@@ -17,10 +17,10 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("member");
-  const [selectedTags, setSelectedTags] = useState<string[]>(["events", "updates"]);
+  const [selectedTags, setSelectedTags] = useState<TagId[]>(["events", "updates"]);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const toggleTag = (tagId: string) => {
+  const toggleTag = (tagId: TagId) => {
     setSelectedTags((currentTags) =>
       currentTags.includes(tagId) ? currentTags.filter((currentTag) => currentTag !== tagId) : [...currentTags, tagId]
     );

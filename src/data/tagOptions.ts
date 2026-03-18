@@ -1,4 +1,4 @@
-import { AnnouncementTag, UserRole } from "@/types";
+import { Tag, UserRole } from "@/types";
 
 export const roleOptions: { label: string; value: UserRole }[] = [
   { label: "Admin", value: "admin" },
@@ -21,7 +21,7 @@ export const roleDescriptions: Record<UserRole, { title: string; description: st
   }
 };
 
-export const availableTags: AnnouncementTag[] = [
+export const availableTags: Tag[] = [
   {
     id: "events",
     label: "Events",

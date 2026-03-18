@@ -1,13 +1,38 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import { Screen } from "@/components/Screen";
+import { availableTags } from "@/data/tagOptions";
 import { theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
+import { announcementService } from "@/services/announcementService";
+import { useEffect, useMemo, useState } from "react";
+import { Announcement } from "@/types";
 
 export default function ProfileScreen() {
   const { state } = useAppContext();
   const user = state.currentUser;
-  const interests = user && user.interests.length > 0 ? user.interests.join(", ") : "No interests set";
+  const [matchedAnnouncements, setMatchedAnnouncements] = useState<Announcement[]>([]);
+
+  const tagLabelMap = useMemo(() => new Map(availableTags.map((tag) => [tag.id, tag.label])), []);
+
+  const interests =
+    user && user.interests.length > 0
+      ? user.interests.map((tagId) => tagLabelMap.get(tagId) ?? tagId).join(", ")
+      : "No interests set";
+
+  useEffect(() => {
+    let isMounted = true;
+
+    announcementService.listTagMatchedAnnouncementsForUser(user, state.announcements).then((announcements) => {
+      if (isMounted) {
+        setMatchedAnnouncements(announcements);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [state.announcements, user]);
 
   return (
     <Screen scrollEnabled>
@@ -24,6 +49,14 @@ export default function ProfileScreen() {
           <Text style={styles.value}>{user?.role ?? "Not assigned"}</Text>
           <Text style={styles.label}>Interests</Text>
           <Text style={styles.value}>{interests}</Text>
+          <Text style={styles.label}>Matching event notifications</Text>
+          <Text style={styles.value}>
+            {user
+              ? matchedAnnouncements.length > 0
+                ? matchedAnnouncements.map((announcement) => announcement.title).join("\n")
+                : "No matching announcements yet"
+              : "Sign in to see matched notifications"}
+          </Text>
         </View>
       </View>
     </Screen>

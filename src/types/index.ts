@@ -2,18 +2,22 @@ import { Dispatch } from "react";
 
 export type UserRole = "admin" | "member" | "organiser";
 
-export type AnnouncementTag = {
-  id: string;
+export type TagId = string;
+
+export type Tag = {
+  id: TagId;
   label: string;
   description: string;
 };
+
+export type AnnouncementTag = Tag;
 
 export type UserProfile = {
   id: string;
   displayName: string;
   email: string;
   role: UserRole;
-  interests: string[];
+  interests: TagId[];
 };
 
 export type UserRegistrationInput = {
@@ -21,7 +25,7 @@ export type UserRegistrationInput = {
   email: string;
   password: string;
   role: UserRole;
-  interests: string[];
+  interests: TagId[];
 };
 
 export type UserLoginInput = {
@@ -38,7 +42,7 @@ export type Announcement = {
   category: string;
   authorName: string;
   audience: UserRole[];
-  tags: string[];
+  tags: TagId[];
   publishedAt: string;
 };
 

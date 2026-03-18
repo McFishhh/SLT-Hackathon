@@ -1,14 +1,14 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { theme } from "@/constants/theme";
-import { AnnouncementTag } from "@/types";
+import { Tag, TagId } from "@/types";
 
 type TagSelectorProps = {
   title: string;
   helperText: string;
-  tags: AnnouncementTag[];
-  selectedTags: string[];
-  onToggleTag: (tagId: string) => void;
+  tags: Tag[];
+  selectedTags: TagId[];
+  onToggleTag: (tagId: TagId) => void;
 };
 
 export function TagSelector({ title, helperText, tags, selectedTags, onToggleTag }: TagSelectorProps) {
