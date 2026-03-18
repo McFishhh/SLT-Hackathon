@@ -1,11 +1,11 @@
 import { PropsWithChildren, createContext, useContext, useReducer } from "react";
 
-import { mockAnnouncements, mockCurrentUser } from "@/data/mockAnnouncements";
+import { mockAnnouncements } from "@/data/mockAnnouncements";
 import { AppAction, AppContextValue, AppState } from "@/types";
 
 const initialState: AppState = {
   announcements: mockAnnouncements,
-  currentUser: mockCurrentUser,
+  currentUser: null,
   selectedAnnouncementId: mockAnnouncements[0]?.id ?? null,
   isLoading: false
 };
@@ -45,6 +45,16 @@ export function AppProvider({ children }: PropsWithChildren) {
   const value: AppContextValue = {
     state,
     dispatch,
+    setCurrentUser: (user) =>
+      dispatch({
+        type: "SET_CURRENT_USER",
+        payload: user
+      }),
+    setLoading: (isLoading) =>
+      dispatch({
+        type: "SET_LOADING",
+        payload: isLoading
+      }),
     setSelectedAnnouncement: (announcementId) =>
       dispatch({
         type: "SET_SELECTED_ANNOUNCEMENT",

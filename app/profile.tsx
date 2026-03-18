@@ -19,11 +19,9 @@ export default function ProfileScreen() {
 
         <View style={styles.card}>
           <Text style={styles.label}>Display name</Text>
-          <Text style={styles.value}>{user?.displayName ?? "Guest visitor"}</Text>
-          <Text style={styles.label}>Email</Text>
-          <Text style={styles.value}>{user?.email ?? "Not signed in"}</Text>
+          <Text style={styles.value}>{user?.displayName ?? "Not signed in"}</Text>
           <Text style={styles.label}>Role</Text>
-          <Text style={styles.value}>{user?.role ?? "visitor"}</Text>
+          <Text style={styles.value}>{user?.role ?? "Not assigned"}</Text>
           <Text style={styles.label}>Interests</Text>
           <Text style={styles.value}>{interests}</Text>
         </View>

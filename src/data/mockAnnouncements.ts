@@ -16,7 +16,8 @@ export const mockAnnouncements: Announcement[] = [
     body: "Join us on Saturday evening for a relaxed town hall gathering. We will introduce the moderation team, share the calendar for the next quarter, and collect feedback on what members want from BigCommunity. This is a good first event for anyone who recently registered and wants to understand how announcements, events, and member support will work together on the platform.",
     category: "Event",
     authorName: "Community Team",
-    audience: ["guest", "member", "admin"],
+    audience: ["admin", "member", "organiser"],
+    tags: ["events", "updates"],
     publishedAt: "18 Mar 2026"
   },
   {
@@ -26,7 +27,8 @@ export const mockAnnouncements: Announcement[] = [
     body: "Volunteer registration will open next week with role categories for logistics, outreach, and event operations. The long-term plan is to let Firebase persist volunteer interests and then filter relevant announcements based on those preferences. This starter already includes a shared user profile shape so those variables can move across screens clearly.",
     category: "Volunteer",
     authorName: "Operations Desk",
-    audience: ["member", "admin"],
+    audience: ["admin", "member", "organiser"],
+    tags: ["volunteers", "updates"],
     publishedAt: "17 Mar 2026"
   },
   {
@@ -36,7 +38,8 @@ export const mockAnnouncements: Announcement[] = [
     body: "The initial framework is designed for clarity over cleverness. Announcement models, user profiles, reducer actions, and service calls are intentionally explicit so future contributors can follow the information flow without guessing. As the project grows, these files should make it easier to add admin publishing tools, notifications, and moderation logic.",
     category: "Platform",
     authorName: "Product Team",
-    audience: ["guest", "member", "admin"],
+    audience: ["admin", "member", "organiser"],
+    tags: ["updates", "wellness"],
     publishedAt: "16 Mar 2026"
   }
 ];

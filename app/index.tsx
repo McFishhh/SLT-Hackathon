@@ -20,14 +20,9 @@ export default function HomeScreen() {
             Start with a clear structure for registration, persistent data, and cross-page information sharing.
           </Text>
 
-          <View style={styles.heroActions}>
-            <Link href="/announcements" style={styles.primaryAction}>
-              Browse announcements
-            </Link>
-            <Link href="/auth" style={styles.secondaryAction}>
-              Registration flow
-            </Link>
-          </View>
+          <Link href="/announcements" style={styles.primaryAction}>
+            Browse announcements
+          </Link>
         </View>
 
         <SectionHeader
@@ -49,11 +44,11 @@ export default function HomeScreen() {
         <View style={styles.snapshotCard}>
           <View style={styles.snapshotRow}>
             <Text style={styles.snapshotLabel}>Active user</Text>
-            <Text style={styles.snapshotValue}>{state.currentUser?.displayName ?? "Guest visitor"}</Text>
+            <Text style={styles.snapshotValue}>{state.currentUser?.displayName ?? "Not signed in"}</Text>
           </View>
           <View style={styles.snapshotRow}>
             <Text style={styles.snapshotLabel}>Role</Text>
-            <Text style={styles.snapshotValue}>{state.currentUser?.role ?? "visitor"}</Text>
+            <Text style={styles.snapshotValue}>{state.currentUser?.role ?? "Not assigned"}</Text>
           </View>
           <View style={styles.snapshotRow}>
             <Text style={styles.snapshotLabel}>Announcements loaded</Text>
@@ -101,30 +96,15 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     maxWidth: 720
   },
-  heroActions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: theme.spacing.md,
-    marginTop: theme.spacing.sm
-  },
   primaryAction: {
+    alignSelf: "flex-start",
     backgroundColor: theme.colors.accent,
     borderRadius: theme.radii.pill,
     color: theme.colors.surface,
     fontSize: 15,
     fontWeight: "700",
     overflow: "hidden",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md
-  },
-  secondaryAction: {
-    borderColor: theme.colors.borderStrong,
-    borderRadius: theme.radii.pill,
-    borderWidth: 1,
-    color: theme.colors.textPrimary,
-    fontSize: 15,
-    fontWeight: "700",
-    overflow: "hidden",
+    marginTop: theme.spacing.sm,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md
   },
