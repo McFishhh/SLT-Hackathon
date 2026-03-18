@@ -30,6 +30,14 @@ export default function AnnouncementDetailScreen() {
           <Text style={styles.meta}>{announcement.publishedAt}</Text>
         </View>
 
+        <View style={styles.tagRow}>
+          {announcement.tags.map((tag) => (
+            <Text key={tag} style={styles.tagChip}>
+              {tag}
+            </Text>
+          ))}
+        </View>
+
         <Text style={styles.title}>{announcement.title}</Text>
         <Text style={styles.summary}>{announcement.summary}</Text>
 
@@ -76,6 +84,23 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "800",
     lineHeight: 38
+  },
+  tagRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.spacing.sm
+  },
+  tagChip: {
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radii.pill,
+    borderWidth: 1,
+    color: theme.colors.textSecondary,
+    fontSize: 13,
+    fontWeight: "700",
+    overflow: "hidden",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs
   },
   summary: {
     color: theme.colors.textSecondary,

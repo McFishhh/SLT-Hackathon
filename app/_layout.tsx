@@ -1,5 +1,6 @@
-import { Stack } from "expo-router";
+import { Link, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { Pressable, StyleSheet, Text } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AppProvider } from "@/context/AppContext";
@@ -26,13 +27,41 @@ export default function RootLayout() {
             }
           }}
         >
-          <Stack.Screen name="index" options={{ title: "BigCommunity" }} />
+          <Stack.Screen
+            name="index"
+            options={{
+              title: "BigCommunity",
+              headerRight: () => (
+                <Link href="./login" asChild>
+                  <Pressable style={styles.headerButton}>
+                    <Text style={styles.headerButtonText}>Login</Text>
+                  </Pressable>
+                </Link>
+              )
+            }}
+          />
           <Stack.Screen name="announcements/index" options={{ title: "Announcements" }} />
           <Stack.Screen name="announcements/[id]" options={{ title: "Announcement" }} />
           <Stack.Screen name="profile" options={{ title: "Profile" }} />
-          <Stack.Screen name="auth" options={{ title: "Join BigCommunity" }} />
+          <Stack.Screen name="auth" options={{ title: "Authentication" }} />
+          <Stack.Screen name="login" options={{ title: "Login" }} />
+          <Stack.Screen name="register" options={{ title: "Register" }} />
         </Stack>
       </AppProvider>
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  headerButton: {
+    backgroundColor: theme.colors.accent,
+    borderRadius: theme.radii.pill,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm
+  },
+  headerButtonText: {
+    color: theme.colors.surface,
+    fontSize: 14,
+    fontWeight: "800"
+  }
+});
