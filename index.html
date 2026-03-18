@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mini Minecraft Prototype</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="hud">
+        <h1>Minecraft Prototype</h1>
+        <p>Move: <strong>WASD / Arrow Keys</strong></p>
+        <p>Switch dimensions: <strong>1 Overworld</strong>, <strong>2 Nether</strong>, <strong>3 End</strong></p>
+        <p>Avoid zombies and creepers. Creepers explode when close.</p>
+        <p id="status"></p>
+      </section>
+      <canvas id="game" width="960" height="640" aria-label="Minecraft style game canvas"></canvas>
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>

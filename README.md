@@ -1,2 +1,20 @@
 # SLT-Hackathon
-<img width="225" height="225" alt="image" src="https://github.com/user-attachments/assets/d54d1f77-ab1e-4dc8-b09c-e385ad719a17" />
+
+A lightweight browser-based Minecraft-style prototype.
+
+## Features
+
+- Player movement (WASD or arrow keys)
+- Enemies: zombies and creepers
+- Chunk-based world loading around the player
+- Block-by-block tile rendering
+- Multiple dimensions: Overworld, Nether, and The End
+
+## Run
+
+Open `/home/runner/work/SLT-Hackathon/SLT-Hackathon/index.html` in a browser.
+
+### Controls
+
+- Move: `W`, `A`, `S`, `D` or arrow keys
+- Dimension switch: `1` (Overworld), `2` (Nether), `3` (The End)
