@@ -142,7 +142,7 @@ export default function AnnouncementDetailScreen() {
 
   const announcement = state.announcements.find((item) => item.id === id);
   const currentUser = state.currentUser;
-  const demoAttendees = id ? mockEventSignups[id] ?? [] : [];
+  const demoAttendees = id && __DEV__ ? mockEventSignups[id] ?? [] : ([] as EventSignup[]);
   const userSignedUpFromProfile = Boolean(id && currentUser?.signedUpEventIds.includes(id));
   const combinedAttendees = [...demoAttendees, ...attendees].filter(
     (attendee, index, allAttendees) => allAttendees.findIndex((item) => item.userId === attendee.userId) === index
