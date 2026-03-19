@@ -1,5 +1,5 @@
 import { FirebaseError } from "firebase/app";
-import { createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 
 import { firebaseAuth, firebaseDb } from "@/lib/firebase";
@@ -68,10 +68,6 @@ export const authService = {
 
       const userProfile = userSnapshot.data() as UserProfile;
 
-      if (userProfile.role !== input.role) {
-        throw new Error(`This account is registered as ${userProfile.role}, not ${input.role}.`);
-      }
-
       return {
         id: credentials.user.uid,
         displayName: userProfile.displayName,
@@ -84,6 +80,14 @@ export const authService = {
         throw error;
       }
 
+      throw new Error(formatAuthError(error));
+    }
+  },
+
+  async logoutUser(): Promise<void> {
+    try {
+      await signOut(firebaseAuth);
+    } catch (error) {
       throw new Error(formatAuthError(error));
     }
   }
