@@ -59,3 +59,13 @@ src/types/                Shared TypeScript models
 - Replace the mock auth and announcement service methods with live Firebase calls
 - Add admin announcement creation and edit flows
 - Add role-based access if different community members need different permissions
+
+## Firestore Rules
+
+Use the starter rules in `firestore.rules` so signed-in users can create and read their own profile documents:
+
+```text
+firebase console -> Firestore Database -> Rules
+```
+
+Paste the contents of `firestore.rules` there and publish them before testing registration/login.

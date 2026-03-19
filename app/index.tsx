@@ -9,6 +9,7 @@ import { useAppContext } from "@/context/AppContext";
 
 export default function HomeScreen() {
   const { state } = useAppContext();
+  console.log("HomeScreen rendered");
 
   return (
     <Screen>
@@ -20,9 +21,17 @@ export default function HomeScreen() {
             Start with a clear structure for registration, persistent data, and cross-page information sharing.
           </Text>
 
-          <Link href="/announcements" style={styles.primaryAction}>
-            Browse announcements
-          </Link>
+          <View style={styles.heroActions}>
+            <Link href="/announcements" style={styles.primaryAction}>
+              Browse announcements
+            </Link>
+
+            {!state.currentUser ? (
+              <Link href="/login" style={styles.secondaryAction}>
+                Log in
+              </Link>
+            ) : null}
+          </View>
         </View>
 
         <SectionHeader
@@ -105,6 +114,25 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     overflow: "hidden",
     marginTop: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md
+  },
+  heroActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.spacing.md,
+    marginTop: theme.spacing.sm
+  },
+  secondaryAction: {
+    alignSelf: "flex-start",
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radii.pill,
+    borderWidth: 1,
+    color: theme.colors.textPrimary,
+    fontSize: 15,
+    fontWeight: "700",
+    overflow: "hidden",
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md
   },
