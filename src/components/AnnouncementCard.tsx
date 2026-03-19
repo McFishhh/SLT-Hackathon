@@ -1,5 +1,6 @@
 import { Link } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useMemo } from "react";
 
 import { theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
@@ -11,7 +12,8 @@ type AnnouncementCardProps = {
 };
 
 export function AnnouncementCard({ announcement, showSummary = false }: AnnouncementCardProps) {
-  const { setSelectedAnnouncement } = useAppContext();
+  const { setSelectedAnnouncement, state } = useAppContext();
+  const tagLabelMap = useMemo(() => new Map(state.tags.map((tag) => [tag.id, tag.label])), [state.tags]);
 
   return (
     <Link
@@ -31,6 +33,14 @@ export function AnnouncementCard({ announcement, showSummary = false }: Announce
         </View>
 
         <Text style={styles.title}>{announcement.title}</Text>
+
+        <View style={styles.tagRow}>
+          {announcement.tags.map((tagId) => (
+            <Text key={tagId} style={styles.tagChip}>
+              {tagLabelMap.get(tagId) ?? tagId}
+            </Text>
+          ))}
+        </View>
 
         {showSummary ? <Text style={styles.summary}>{announcement.summary}</Text> : null}
 
@@ -82,6 +92,23 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "800",
     lineHeight: 28
+  },
+  tagRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.spacing.xs
+  },
+  tagChip: {
+    backgroundColor: theme.colors.background,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radii.pill,
+    borderWidth: 1,
+    color: theme.colors.textSecondary,
+    fontSize: 12,
+    fontWeight: "700",
+    overflow: "hidden",
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs
   },
   summary: {
     color: theme.colors.textSecondary,

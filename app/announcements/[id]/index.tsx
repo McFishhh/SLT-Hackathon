@@ -1,18 +1,18 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-
-import { checkIfSignedUp, submitSignup } from "@/services/signupService";
 
 import { Screen } from "@/components/Screen";
 import { theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
-import { useFocusEffect } from "expo-router";
+import { checkIfSignedUp, submitSignup } from "@/services/signupService";
 
 export default function AnnouncementDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { setCurrentUser, setLoading, state } = useAppContext();
   const router = useRouter();
+
+  const tagLabelMap = useMemo(() => new Map(state.tags.map((tag) => [tag.id, tag.label])), [state.tags]);
 
   const [hasSignedUp, setHasSignedUp] = useState(Boolean(id && state.currentUser?.signedUpEventIds.includes(id)));
   const [checkingSignup, setCheckingSignup] = useState(true);
@@ -51,7 +51,7 @@ export default function AnnouncementDetailScreen() {
         }
       };
 
-      check();
+      void check();
     }, [hasCheckedSignup, id, state.currentUser?.id, state.currentUser?.signedUpEventIds])
   );
 
@@ -72,18 +72,21 @@ export default function AnnouncementDetailScreen() {
 
     try {
       setLoading(true);
+
       await submitSignup({
         eventId: id,
         name: state.currentUser.displayName,
         email: state.currentUser.email,
         userId: state.currentUser.id
       });
+
       setCurrentUser({
         ...state.currentUser,
         signedUpEventIds: state.currentUser.signedUpEventIds.includes(id)
           ? state.currentUser.signedUpEventIds
           : [...state.currentUser.signedUpEventIds, id]
       });
+
       setHasSignedUp(true);
       Alert.alert("Signed up", "Your event signup has been confirmed.");
     } catch (error) {
@@ -101,9 +104,7 @@ export default function AnnouncementDetailScreen() {
       <Screen>
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>Announcement not found</Text>
-          <Text style={styles.emptyBody}>
-            This route is ready for dynamic data, but the requested item does not exist yet.
-          </Text>
+          <Text style={styles.emptyBody}>This route is ready for dynamic data, but the requested item does not exist yet.</Text>
         </View>
       </Screen>
     );
@@ -119,7 +120,9 @@ export default function AnnouncementDetailScreen() {
 
         <View style={styles.tagRow}>
           {announcement.tags.map((tag) => (
-            <Text key={tag} style={styles.tagChip}>{tag}</Text>
+            <Text key={tag} style={styles.tagChip}>
+              {tagLabelMap.get(tag) ?? tag}
+            </Text>
           ))}
         </View>
 
@@ -150,12 +153,12 @@ export default function AnnouncementDetailScreen() {
             {checkingSignup
               ? "Checking..."
               : hasSignedUp
-                ? "Signed Up"
-                : state.currentUser
-                  ? state.isLoading
-                    ? "Signing You Up..."
-                    : "Sign Up for this Event"
-                  : "Log In to Sign Up"}
+              ? "Signed Up"
+              : state.currentUser
+              ? state.isLoading
+                ? "Signing You Up..."
+                : "Sign Up for this Event"
+              : "Log In to Sign Up"}
           </Text>
         </Pressable>
       </View>
@@ -164,60 +167,121 @@ export default function AnnouncementDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { gap: theme.spacing.lg },
-  badgeRow: { alignItems: "center", flexDirection: "row", gap: theme.spacing.sm },
+  content: {
+    gap: theme.spacing.lg
+  },
+  badgeRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: theme.spacing.sm
+  },
   badge: {
     backgroundColor: theme.colors.accentSoft,
     borderRadius: theme.radii.pill,
     color: theme.colors.accent,
-    fontSize: 13, fontWeight: "700", overflow: "hidden",
-    paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.xs
+    fontSize: 13,
+    fontWeight: "700",
+    overflow: "hidden",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs
   },
-  meta: { color: theme.colors.textSecondary, fontSize: 14 },
-  title: { color: theme.colors.textPrimary, fontSize: 32, fontWeight: "800", lineHeight: 38 },
-  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm },
+  meta: {
+    color: theme.colors.textSecondary,
+    fontSize: 14
+  },
+  title: {
+    color: theme.colors.textPrimary,
+    fontSize: 32,
+    fontWeight: "800",
+    lineHeight: 38
+  },
+  tagRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.spacing.sm
+  },
   tagChip: {
-    backgroundColor: theme.colors.surface, borderColor: theme.colors.border,
-    borderRadius: theme.radii.pill, borderWidth: 1, color: theme.colors.textSecondary,
-    fontSize: 13, fontWeight: "700", overflow: "hidden",
-    paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.xs
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radii.pill,
+    borderWidth: 1,
+    color: theme.colors.textSecondary,
+    fontSize: 13,
+    fontWeight: "700",
+    overflow: "hidden",
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs
   },
-  summary: { color: theme.colors.textSecondary, fontSize: 17, lineHeight: 25 },
+  summary: {
+    color: theme.colors.textSecondary,
+    fontSize: 17,
+    lineHeight: 25
+  },
   bodyCard: {
-    backgroundColor: theme.colors.surface, borderColor: theme.colors.border,
-    borderRadius: theme.radii.lg, borderWidth: 1, padding: theme.spacing.lg
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radii.lg,
+    borderWidth: 1,
+    padding: theme.spacing.lg
   },
-  body: { color: theme.colors.textPrimary, fontSize: 16, lineHeight: 26 },
+  body: {
+    color: theme.colors.textPrimary,
+    fontSize: 16,
+    lineHeight: 26
+  },
   infoCard: {
-    backgroundColor: theme.colors.card, borderRadius: theme.radii.lg,
-    gap: theme.spacing.xs, padding: theme.spacing.lg
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.radii.lg,
+    gap: theme.spacing.xs,
+    padding: theme.spacing.lg
   },
-  infoLabel: { color: theme.colors.textSecondary, fontSize: 13, fontWeight: "700", textTransform: "uppercase" },
-  infoValue: { color: theme.colors.textPrimary, fontSize: 16, fontWeight: "600", marginBottom: theme.spacing.sm },
+  infoLabel: {
+    color: theme.colors.textSecondary,
+    fontSize: 13,
+    fontWeight: "700",
+    textTransform: "uppercase"
+  },
+  infoValue: {
+    color: theme.colors.textPrimary,
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: theme.spacing.sm
+  },
   emptyState: {
-    backgroundColor: theme.colors.surface, borderColor: theme.colors.border,
-    borderRadius: theme.radii.lg, borderWidth: 1, gap: theme.spacing.sm, padding: theme.spacing.xl
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radii.lg,
+    borderWidth: 1,
+    gap: theme.spacing.sm,
+    padding: theme.spacing.xl
   },
-  emptyTitle: { color: theme.colors.textPrimary, fontSize: 24, fontWeight: "800" },
-  emptyBody: { color: theme.colors.textSecondary, fontSize: 16, lineHeight: 24 },
-
+  emptyTitle: {
+    color: theme.colors.textPrimary,
+    fontSize: 24,
+    fontWeight: "800"
+  },
+  emptyBody: {
+    color: theme.colors.textSecondary,
+    fontSize: 16,
+    lineHeight: 24
+  },
   signUpButton: {
+    alignItems: "center",
     backgroundColor: theme.colors.accent,
     borderRadius: theme.radii.pill,
-    alignItems: "center",
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
     marginTop: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md
   },
   signUpButtonText: {
     color: theme.colors.surface,
     fontSize: 16,
-    fontWeight: "800",
+    fontWeight: "800"
   },
   signUpButtonDisabled: {
     opacity: 0.7
   },
   signUpButtonDone: {
-    backgroundColor: theme.colors.brownDark,
+    backgroundColor: theme.colors.brownDark
   }
 });

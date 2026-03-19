@@ -79,7 +79,7 @@ export default function RootLayout() {
               )
             }}
           />
-          
+
           <Stack.Screen name="announcements" options={{ title: "Back" }} />
           <Stack.Screen name="announcements/create" options={{ title: "Create Announcement" }} />
           <Stack.Screen name="announcements/[id]" options={{ title: "Back" }} />

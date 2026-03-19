@@ -5,12 +5,12 @@ import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { AuthRoleSelector } from "@/components/AuthRoleSelector";
 import { TagSelector } from "@/components/TagSelector";
 import { Screen } from "@/components/Screen";
-import { availableTags, roleDescriptions } from "@/data/tagOptions";
+import { roleDescriptions } from "@/data/tagOptions";
 import { theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
 import { announcementService } from "@/services/announcementService";
 import { authService } from "@/services/authService";
-import { UserRole } from "@/types";
+import { TagId, UserRole } from "@/types";
 
 export default function RegisterScreen() {
   const { redirectTo } = useLocalSearchParams<{ redirectTo?: string }>();
@@ -19,10 +19,11 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("member");
-  const [selectedTags, setSelectedTags] = useState<string[]>(["events", "updates"]);
+  const [selectedTags, setSelectedTags] = useState<TagId[]>(["events", "updates"]);
   const [errorMessage, setErrorMessage] = useState("");
+  const shouldSelectTagsDuringRegistration = role === "member";
 
-  const toggleTag = (tagId: string) => {
+  const toggleTag = (tagId: TagId) => {
     setSelectedTags((currentTags) =>
       currentTags.includes(tagId) ? currentTags.filter((currentTag) => currentTag !== tagId) : [...currentTags, tagId]
     );
@@ -48,7 +49,7 @@ export default function RegisterScreen() {
         email,
         password,
         role,
-        interests: selectedTags
+        interests: shouldSelectTagsDuringRegistration ? selectedTags : []
       });
       await announcementService.ensureAnnouncementsBootstrapped();
       const announcements = await announcementService.listAnnouncements();
@@ -112,19 +113,15 @@ export default function RegisterScreen() {
             <Text style={styles.rolePanelBody}>{roleDescriptions[role].description}</Text>
           </View>
 
-          <TagSelector
-            helperText={
-              role === "admin"
-                ? "These are sample tags the admin can manage and expand later."
-                : role === "organiser"
-                  ? "Choose which tags this organiser can apply to announcements."
-                  : "Choose the tags this member wants to receive updates about."
-            }
-            selectedTags={selectedTags}
-            tags={availableTags}
-            title={role === "member" ? "Interested tags" : "Assigned tags"}
-            onToggleTag={toggleTag}
-          />
+          {shouldSelectTagsDuringRegistration ? (
+            <TagSelector
+              helperText="Choose the tags this member wants to receive updates about."
+              selectedTags={selectedTags}
+              tags={state.tags}
+              title="Interested tags"
+              onToggleTag={toggleTag}
+            />
+          ) : null}
 
           {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 

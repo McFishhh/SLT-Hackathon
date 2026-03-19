@@ -3,7 +3,11 @@ import { createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword,
 import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 
 import { firebaseAuth, firebaseDb } from "@/lib/firebase";
-import { UserLoginInput, UserProfile, UserRegistrationInput } from "@/types";
+import { TagId, UserLoginInput, UserProfile, UserRegistrationInput } from "@/types";
+
+function normalizeTagIds(tags: TagId[]): TagId[] {
+  return Array.from(new Set(tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean)));
+}
 
 function formatAuthError(error: unknown): string {
   if (!(error instanceof FirebaseError)) {
@@ -39,7 +43,7 @@ export const authService = {
       displayName: userProfile.displayName,
       email: userProfile.email,
       role: userProfile.role,
-      interests: userProfile.interests ?? [],
+      interests: normalizeTagIds(userProfile.interests ?? []),
       signedUpEventIds: userProfile.signedUpEventIds ?? []
     };
   },
@@ -57,7 +61,7 @@ export const authService = {
         displayName: input.displayName,
         email: input.email.trim(),
         role: input.role,
-        interests: input.interests,
+        interests: normalizeTagIds(input.interests),
         signedUpEventIds: []
       };
 

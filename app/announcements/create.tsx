@@ -6,21 +6,27 @@ import { Screen } from "@/components/Screen";
 import { TagSelector } from "@/components/TagSelector";
 import { theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
-import { availableTags } from "@/data/tagOptions";
 import { announcementService } from "@/services/announcementService";
+import { TagId, UserRole } from "@/types";
+
+const defaultAudience: UserRole[] = ["admin", "member", "organiser"];
 
 export default function CreateAnnouncementScreen() {
   const { state, setAnnouncements, setLoading } = useAppContext();
   const user = state.currentUser;
+  const canCreateAnnouncements = user?.role === "organiser" || user?.role === "admin";
 
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>(user?.interests ?? []);
+  const [category, setCategory] = useState("Event");
+  const [summary, setSummary] = useState("");
+  const [body, setBody] = useState("");
+  const [selectedTags, setSelectedTags] = useState<TagId[]>(user?.interests ?? []);
   const [errorMessage, setErrorMessage] = useState("");
 
   const orderedTags = useMemo(() => {
     const priorityTagSet = new Set(user?.interests ?? []);
-    return [...availableTags].sort((left, right) => {
+
+    return [...state.tags].sort((left, right) => {
       const leftPriority = priorityTagSet.has(left.id) ? 0 : 1;
       const rightPriority = priorityTagSet.has(right.id) ? 0 : 1;
 
@@ -30,21 +36,21 @@ export default function CreateAnnouncementScreen() {
 
       return left.label.localeCompare(right.label);
     });
-  }, [user?.interests]);
+  }, [state.tags, user?.interests]);
 
-  const toggleTag = (tagId: string) => {
+  const toggleTag = (tagId: TagId) => {
     setSelectedTags((currentTags) =>
       currentTags.includes(tagId) ? currentTags.filter((currentTag) => currentTag !== tagId) : [...currentTags, tagId]
     );
   };
 
   const handleCreateAnnouncement = async () => {
-    if (!user || user.role !== "organiser") {
+    if (!user || !canCreateAnnouncements) {
       return;
     }
 
-    if (!title.trim() || !description.trim()) {
-      setErrorMessage("Add both a title and a description.");
+    if (!title.trim() || !body.trim()) {
+      setErrorMessage("Title and details are required.");
       return;
     }
 
@@ -59,13 +65,17 @@ export default function CreateAnnouncementScreen() {
 
       const createdAnnouncement = await announcementService.createAnnouncement({
         title,
-        description,
+        category,
+        summary,
+        body,
         tags: selectedTags,
+        audience: [...defaultAudience],
         authorName: user.displayName
       });
 
       const announcements = await announcementService.listAnnouncements();
       setAnnouncements(announcements);
+
       router.replace({
         pathname: "/announcements/[id]",
         params: { id: createdAnnouncement.id }
@@ -81,8 +91,8 @@ export default function CreateAnnouncementScreen() {
     return (
       <Screen>
         <View style={styles.gateCard}>
-          <Text style={styles.gateTitle}>Log in as an organiser</Text>
-          <Text style={styles.gateBody}>Only organiser accounts can create announcements.</Text>
+          <Text style={styles.gateTitle}>Log in to create announcements</Text>
+          <Text style={styles.gateBody}>Only organiser and admin accounts can publish new announcements.</Text>
           <Pressable onPress={() => router.push("/login" as never)}>
             <Text style={styles.inlineLink}>Go to login</Text>
           </Pressable>
@@ -91,12 +101,12 @@ export default function CreateAnnouncementScreen() {
     );
   }
 
-  if (user.role !== "organiser") {
+  if (!canCreateAnnouncements) {
     return (
       <Screen>
         <View style={styles.gateCard}>
-          <Text style={styles.gateTitle}>Organiser access required</Text>
-          <Text style={styles.gateBody}>Switch to an organiser account to create announcements.</Text>
+          <Text style={styles.gateTitle}>Access restricted</Text>
+          <Text style={styles.gateBody}>Only organisers and admins can create announcements.</Text>
           <Pressable onPress={() => router.push("/announcements" as never)}>
             <Text style={styles.inlineLink}>Back to announcements</Text>
           </Pressable>
@@ -110,37 +120,55 @@ export default function CreateAnnouncementScreen() {
       <View style={styles.wrapper}>
         <View style={styles.header}>
           <Text style={styles.eyebrow}>Organizer tools</Text>
-          <Text style={styles.title}>Create an announcement</Text>
+          <Text style={styles.title}>Create announcement</Text>
           <Text style={styles.subtitle}>
-            Your organization tags appear first, but you can choose any available tag for this announcement.
+            Use clear details and relevant tags so members can quickly find announcements that matter to them.
           </Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.label}>Announcement title</Text>
+          <Text style={styles.label}>Title</Text>
           <TextInput
-            onChangeText={setTitle}
-            placeholder="Example: Family Wellness Screening Day"
-            placeholderTextColor={theme.colors.textMuted}
             style={styles.input}
             value={title}
+            onChangeText={setTitle}
+            placeholder="Community town hall"
+            placeholderTextColor={theme.colors.textMuted}
           />
 
-          <Text style={styles.label}>Announcement description</Text>
+          <Text style={styles.label}>Category</Text>
           <TextInput
+            style={styles.input}
+            value={category}
+            onChangeText={setCategory}
+            placeholder="Event"
+            placeholderTextColor={theme.colors.textMuted}
+          />
+
+          <Text style={styles.label}>Summary (optional)</Text>
+          <TextInput
+            style={styles.input}
+            value={summary}
+            onChangeText={setSummary}
+            placeholder="Short one-line summary"
+            placeholderTextColor={theme.colors.textMuted}
+          />
+
+          <Text style={styles.label}>Details</Text>
+          <TextInput
+            style={[styles.input, styles.bodyInput]}
+            value={body}
+            onChangeText={setBody}
+            placeholder="Share full event details"
+            placeholderTextColor={theme.colors.textMuted}
             multiline
             numberOfLines={6}
-            onChangeText={setDescription}
-            placeholder="Add the key details participants need to know."
-            placeholderTextColor={theme.colors.textMuted}
-            style={[styles.input, styles.descriptionInput]}
             textAlignVertical="top"
-            value={description}
           />
 
           <TagSelector
             title="Related tags"
-            helperText="Tags represented by your organization are listed first."
+            helperText="Tags matching your organization interests are listed first."
             tags={orderedTags}
             selectedTags={selectedTags}
             onToggleTag={toggleTag}
@@ -148,15 +176,21 @@ export default function CreateAnnouncementScreen() {
 
           {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
-          <Pressable
-            disabled={state.isLoading}
-            onPress={handleCreateAnnouncement}
-            style={[styles.primaryButton, state.isLoading && styles.buttonDisabled]}
-          >
-            <Text style={styles.primaryButtonText}>
-              {state.isLoading ? "Creating announcement..." : "Create announcement"}
-            </Text>
-          </Pressable>
+          <View style={styles.actions}>
+            <Pressable
+              disabled={state.isLoading}
+              onPress={handleCreateAnnouncement}
+              style={[styles.primaryButton, state.isLoading && styles.buttonDisabled]}
+            >
+              <Text style={styles.primaryButtonText}>
+                {state.isLoading ? "Creating announcement..." : "Publish announcement"}
+              </Text>
+            </Pressable>
+
+            <Pressable onPress={() => router.back()} style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>Cancel</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </Screen>
@@ -214,14 +248,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md
   },
-  descriptionInput: {
+  bodyInput: {
     minHeight: 150
+  },
+  errorText: {
+    color: "#9a2f12",
+    fontSize: 14,
+    fontWeight: "600",
+    lineHeight: 20,
+    marginTop: theme.spacing.md
+  },
+  actions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.md
   },
   primaryButton: {
     alignItems: "center",
     backgroundColor: theme.colors.accent,
     borderRadius: theme.radii.pill,
-    marginTop: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md
   },
   buttonDisabled: {
@@ -232,12 +279,19 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "800"
   },
-  errorText: {
-    color: "#9a2f12",
+  secondaryButton: {
+    alignItems: "center",
+    backgroundColor: theme.colors.background,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radii.pill,
+    borderWidth: 1,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md
+  },
+  secondaryButtonText: {
+    color: theme.colors.textPrimary,
     fontSize: 14,
-    fontWeight: "600",
-    lineHeight: 20,
-    marginTop: theme.spacing.md
+    fontWeight: "700"
   },
   gateCard: {
     alignSelf: "center",

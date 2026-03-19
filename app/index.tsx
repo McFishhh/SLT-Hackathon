@@ -1,4 +1,5 @@
 import { Link, router } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { AnnouncementCard } from "@/components/AnnouncementCard";
@@ -7,10 +8,38 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
 import { roleOptions } from "@/data/tagOptions";
+import { announcementService } from "@/services/announcementService";
 import { authService } from "@/services/authService";
+import { Announcement } from "@/types";
 
 export default function HomeScreen() {
   const { state, setCurrentUser, setLoading } = useAppContext();
+  const [homeAnnouncements, setHomeAnnouncements] = useState<Announcement[]>(state.announcements);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadAnnouncements = async () => {
+      const announcementsForHome = await announcementService.listAnnouncementsForUser(state.currentUser, state.announcements);
+
+      if (isMounted) {
+        setHomeAnnouncements(announcementsForHome);
+      }
+    };
+
+    void loadAnnouncements();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [state.announcements, state.currentUser]);
+
+  const featuredAnnouncements = useMemo(() => homeAnnouncements.slice(0, 3), [homeAnnouncements]);
+
+  const usesTagMatching = state.currentUser?.role === "member" || state.currentUser?.role === "organiser";
+  const featuredSubtitle = usesTagMatching
+    ? "Showing only announcements that match the tags you selected."
+    : "These cards are driven by typed data and can later be sourced from Firestore.";
 
   const privilegeLabel = state.currentUser
     ? roleOptions.find((option) => option.value === state.currentUser?.role)?.label ?? "Member"
@@ -76,19 +105,29 @@ export default function HomeScreen() {
               <Link href="/login" style={styles.secondaryAction}>
                 Log in
               </Link>
-            ) : null}
+            ) : (
+              <Link href="/profile" style={styles.secondaryAction}>
+                Profile
+              </Link>
+            )}
           </View>
         </View>
 
-        <SectionHeader
-          title="Featured announcements"
-          subtitle="These cards are driven by typed data and can later be sourced from Firestore."
-        />
+        <SectionHeader title="Featured announcements" subtitle={featuredSubtitle} />
 
         <View style={styles.grid}>
-          {state.announcements.slice(0, 3).map((announcement) => (
-            <AnnouncementCard key={announcement.id} announcement={announcement} />
-          ))}
+          {featuredAnnouncements.length > 0 ? (
+            featuredAnnouncements.map((announcement) => <AnnouncementCard key={announcement.id} announcement={announcement} />)
+          ) : (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>No matching announcements yet</Text>
+              <Text style={styles.emptyBody}>
+                {usesTagMatching
+                  ? "Update your tag preferences in your profile to receive announcements relevant to you."
+                  : "There are no announcements available right now."}
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </Screen>
@@ -227,5 +266,23 @@ const styles = StyleSheet.create({
   },
   grid: {
     gap: theme.spacing.lg
+  },
+  emptyCard: {
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radii.lg,
+    borderWidth: 1,
+    gap: theme.spacing.sm,
+    padding: theme.spacing.lg
+  },
+  emptyTitle: {
+    color: theme.colors.textPrimary,
+    fontSize: 18,
+    fontWeight: "800"
+  },
+  emptyBody: {
+    color: theme.colors.textSecondary,
+    fontSize: 15,
+    lineHeight: 22
   }
 });

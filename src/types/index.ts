@@ -2,8 +2,17 @@ import { Dispatch } from "react";
 
 export type UserRole = "admin" | "member" | "organiser";
 
-export type AnnouncementTag = {
-  id: string;
+export type TagId = string;
+
+export type Tag = {
+  id: TagId;
+  label: string;
+  description: string;
+};
+
+export type AnnouncementTag = Tag;
+
+export type TagInput = {
   label: string;
   description: string;
 };
@@ -13,7 +22,7 @@ export type UserProfile = {
   displayName: string;
   email: string;
   role: UserRole;
-  interests: string[];
+  interests: TagId[];
   signedUpEventIds: string[];
 };
 
@@ -22,7 +31,7 @@ export type UserRegistrationInput = {
   email: string;
   password: string;
   role: UserRole;
-  interests: string[];
+  interests: TagId[];
 };
 
 export type UserLoginInput = {
@@ -32,9 +41,13 @@ export type UserLoginInput = {
 
 export type CreateAnnouncementInput = {
   title: string;
-  description: string;
-  tags: string[];
+  tags: TagId[];
   authorName: string;
+  body?: string;
+  description?: string;
+  summary?: string;
+  category?: string;
+  audience?: UserRole[];
 };
 
 export type Announcement = {
@@ -45,12 +58,22 @@ export type Announcement = {
   category: string;
   authorName: string;
   audience: UserRole[];
-  tags: string[];
+  tags: TagId[];
   publishedAt: string;
+};
+
+export type AnnouncementInput = {
+  title: string;
+  summary: string;
+  body: string;
+  category: string;
+  audience: UserRole[];
+  tags: TagId[];
 };
 
 export type AppState = {
   announcements: Announcement[];
+  tags: Tag[];
   currentUser: UserProfile | null;
   selectedAnnouncementId: string | null;
   isLoading: boolean;
@@ -72,6 +95,34 @@ export type AppAction =
   | {
       type: "SET_SELECTED_ANNOUNCEMENT";
       payload: string | null;
+    }
+  | {
+      type: "CREATE_ANNOUNCEMENT";
+      payload: Announcement;
+    }
+  | {
+      type: "UPDATE_ANNOUNCEMENT";
+      payload: Announcement;
+    }
+  | {
+      type: "DELETE_ANNOUNCEMENT";
+      payload: string;
+    }
+  | {
+      type: "UPDATE_CURRENT_USER_INTERESTS";
+      payload: TagId[];
+    }
+  | {
+      type: "CREATE_TAG";
+      payload: Tag;
+    }
+  | {
+      type: "UPDATE_TAG";
+      payload: Tag;
+    }
+  | {
+      type: "DELETE_TAG";
+      payload: TagId;
     };
 
 export type AppContextValue = {
@@ -81,4 +132,11 @@ export type AppContextValue = {
   setSelectedAnnouncement: (announcementId: string | null) => void;
   setCurrentUser: (user: UserProfile | null) => void;
   setLoading: (isLoading: boolean) => void;
+  createAnnouncement: (input: AnnouncementInput) => void;
+  updateAnnouncement: (announcementId: string, input: AnnouncementInput) => void;
+  deleteAnnouncement: (announcementId: string) => void;
+  updateCurrentUserInterests: (interests: TagId[]) => void;
+  createTag: (input: TagInput) => void;
+  updateTag: (tagId: TagId, input: TagInput) => void;
+  deleteTag: (tagId: TagId) => void;
 };
