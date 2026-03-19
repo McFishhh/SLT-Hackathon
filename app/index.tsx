@@ -1,19 +1,44 @@
-import { Link } from "expo-router";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Link, router } from "expo-router";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { AnnouncementCard } from "@/components/AnnouncementCard";
 import { Screen } from "@/components/Screen";
 import { SectionHeader } from "@/components/SectionHeader";
 import { theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
+import { authService } from "@/services/authService";
 
 export default function HomeScreen() {
-  const { state } = useAppContext();
+  const { state, setCurrentUser, setLoading } = useAppContext();
   console.log("HomeScreen rendered");
+
+  const handleLogout = async () => {
+    try {
+      setLoading(true);
+      await authService.logoutUser();
+      setCurrentUser(null);
+      router.replace("/login");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
+        {state.currentUser ? (
+          <View style={styles.userRow}>
+            <Text style={styles.userName}>{state.currentUser.displayName}</Text>
+            <Pressable
+              disabled={state.isLoading}
+              onPress={handleLogout}
+              style={[styles.logoutButton, state.isLoading && styles.logoutButtonDisabled]}
+            >
+              <Text style={styles.logoutButtonText}>{state.isLoading ? "Logging out..." : "Log Out"}</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>Community announcement framework</Text>
           <Text style={styles.title}>BigCommunity keeps updates visible, organized, and easy to extend.</Text>
@@ -44,30 +69,6 @@ export default function HomeScreen() {
             <AnnouncementCard key={announcement.id} announcement={announcement} />
           ))}
         </View>
-
-        <SectionHeader
-          title="Current session snapshot"
-          subtitle="This demonstrates how user and app variables can be shared cleanly across pages."
-        />
-
-        <View style={styles.snapshotCard}>
-          <View style={styles.snapshotRow}>
-            <Text style={styles.snapshotLabel}>Active user</Text>
-            <Text style={styles.snapshotValue}>{state.currentUser?.displayName ?? "Not signed in"}</Text>
-          </View>
-          <View style={styles.snapshotRow}>
-            <Text style={styles.snapshotLabel}>Role</Text>
-            <Text style={styles.snapshotValue}>{state.currentUser?.role ?? "Not assigned"}</Text>
-          </View>
-          <View style={styles.snapshotRow}>
-            <Text style={styles.snapshotLabel}>Announcements loaded</Text>
-            <Text style={styles.snapshotValue}>{state.announcements.length}</Text>
-          </View>
-          <View style={styles.snapshotRow}>
-            <Text style={styles.snapshotLabel}>Selected announcement</Text>
-            <Text style={styles.snapshotValue}>{state.selectedAnnouncementId ?? "None selected"}</Text>
-          </View>
-        </View>
       </ScrollView>
     </Screen>
   );
@@ -77,6 +78,33 @@ const styles = StyleSheet.create({
   content: {
     gap: theme.spacing.xl,
     paddingBottom: theme.spacing.xxl
+  },
+  userRow: {
+    alignItems: "center",
+    alignSelf: "flex-end",
+    flexDirection: "row",
+    gap: theme.spacing.sm
+  },
+  userName: {
+    color: theme.colors.textPrimary,
+    fontSize: 14,
+    fontWeight: "700"
+  },
+  logoutButton: {
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radii.pill,
+    borderWidth: 1,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm
+  },
+  logoutButtonDisabled: {
+    opacity: 0.72
+  },
+  logoutButtonText: {
+    color: theme.colors.textPrimary,
+    fontSize: 14,
+    fontWeight: "700"
   },
   hero: {
     backgroundColor: theme.colors.card,
@@ -138,28 +166,5 @@ const styles = StyleSheet.create({
   },
   grid: {
     gap: theme.spacing.lg
-  },
-  snapshotCard: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radii.lg,
-    borderWidth: 1,
-    gap: theme.spacing.md,
-    padding: theme.spacing.lg
-  },
-  snapshotRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between"
-  },
-  snapshotLabel: {
-    color: theme.colors.textSecondary,
-    fontSize: 14,
-    fontWeight: "600"
-  },
-  snapshotValue: {
-    color: theme.colors.textPrimary,
-    fontSize: 15,
-    fontWeight: "700"
   }
 });
