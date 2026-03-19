@@ -60,13 +60,11 @@ export const announcementService = {
         shouldCommit = true;
       }
 
-      if (!bootstrapSnapshot.exists()) {
-        batch.set(bootstrapDocRef, {
-          seededAt: new Date().toISOString(),
-          seededCount: mockAnnouncements.length
-        });
-        shouldCommit = true;
-      }
+      batch.set(bootstrapDocRef, {
+        seededAt: new Date().toISOString(),
+        seededCount: mockAnnouncements.length
+      });
+      shouldCommit = true;
     }
 
     if (!shouldCommit) {
