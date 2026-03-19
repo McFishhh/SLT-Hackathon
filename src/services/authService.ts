@@ -68,10 +68,6 @@ export const authService = {
 
       const userProfile = userSnapshot.data() as UserProfile;
 
-      if (userProfile.role !== input.role) {
-        throw new Error(`This account is registered as ${userProfile.role}, not ${input.role}.`);
-      }
-
       return {
         id: credentials.user.uid,
         displayName: userProfile.displayName,

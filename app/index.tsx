@@ -6,11 +6,23 @@ import { Screen } from "@/components/Screen";
 import { SectionHeader } from "@/components/SectionHeader";
 import { theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
+import { roleOptions } from "@/data/tagOptions";
 import { authService } from "@/services/authService";
 
 export default function HomeScreen() {
   const { state, setCurrentUser, setLoading } = useAppContext();
   console.log("HomeScreen rendered");
+
+  const privilegeLabel = state.currentUser
+    ? roleOptions.find((option) => option.value === state.currentUser?.role)?.label ?? "Member"
+    : "";
+
+  const privilegeBadgeStyle =
+    state.currentUser?.role === "admin"
+      ? styles.privilegeBadgeAdmin
+      : state.currentUser?.role === "organiser"
+      ? styles.privilegeBadgeOrganiser
+      : styles.privilegeBadgeMember;
 
   const handleLogout = async () => {
     try {
@@ -28,6 +40,9 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         {state.currentUser ? (
           <View style={styles.userRow}>
+            <View style={[styles.privilegeBadge, privilegeBadgeStyle]}>
+              <Text style={styles.privilegeBadgeText}>{privilegeLabel}</Text>
+            </View>
             <Text style={styles.userName}>{state.currentUser.displayName}</Text>
             <Pressable
               disabled={state.isLoading}
@@ -85,6 +100,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: theme.spacing.sm
   },
+  privilegeBadge: {
+    borderRadius: theme.radii.md,
+    borderWidth: 1,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs
+  },
+  privilegeBadgeAdmin: {
+    backgroundColor: "#fde8e8",
+    borderColor: "#f8b4b4"
+  },
+  privilegeBadgeMember: {
+    backgroundColor: "#e8f8ec",
+    borderColor: "#b4e2bf"
+  },
+  privilegeBadgeOrganiser: {
+    backgroundColor: "#e8f1ff",
+    borderColor: "#b8d3ff"
+  },
+  privilegeBadgeText: {
+    color: theme.colors.textPrimary,
+    fontSize: 13,
+    fontWeight: "700"
+  },
   userName: {
     color: theme.colors.textPrimary,
     fontSize: 14,
@@ -140,12 +178,14 @@ const styles = StyleSheet.create({
     color: theme.colors.surface,
     fontSize: 15,
     fontWeight: "700",
+    minHeight: 44,
     overflow: "hidden",
-    marginTop: theme.spacing.sm,
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md
+    paddingVertical: theme.spacing.md,
+    textAlign: "center"
   },
   heroActions: {
+    alignItems: "center",
     flexDirection: "row",
     flexWrap: "wrap",
     gap: theme.spacing.md,
@@ -160,9 +200,11 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
     fontSize: 15,
     fontWeight: "700",
+    minHeight: 44,
     overflow: "hidden",
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md
+    paddingVertical: theme.spacing.md,
+    textAlign: "center"
   },
   grid: {
     gap: theme.spacing.lg
