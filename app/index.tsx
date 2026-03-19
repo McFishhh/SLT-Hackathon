@@ -9,6 +9,7 @@ import { useAppContext } from "@/context/AppContext";
 
 export default function HomeScreen() {
   const { state } = useAppContext();
+  console.log("HomeScreen rendered");
 
   return (
     <Screen>

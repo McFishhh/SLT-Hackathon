@@ -1,0 +1,146 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { checkIfSignedUp } from "@/services/signupService";
+
+import { Screen } from "@/components/Screen";
+import { theme } from "@/constants/theme";
+import { useAppContext } from "@/context/AppContext";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
+
+export default function AnnouncementDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { state } = useAppContext();
+  const router = useRouter();
+
+  const [hasSignedUp, setHasSignedUp] = useState(false);
+  const [checkingSignup, setCheckingSignup] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      const check = async () => {
+        setCheckingSignup(true);
+        const result = await checkIfSignedUp(id, state.currentUser?.id ?? null);
+        setHasSignedUp(result);
+        setCheckingSignup(false);
+      };
+      check();
+    }, [id, state.currentUser?.id])
+  );
+
+  const announcement = state.announcements.find((item) => item.id === id);
+
+  if (!announcement) {
+    return (
+      <Screen>
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyTitle}>Announcement not found</Text>
+          <Text style={styles.emptyBody}>
+            This route is ready for dynamic data, but the requested item does not exist yet.
+          </Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen scrollEnabled>
+      <View style={styles.content}>
+        <View style={styles.badgeRow}>
+          <Text style={styles.badge}>{announcement.category}</Text>
+          <Text style={styles.meta}>{announcement.publishedAt}</Text>
+        </View>
+
+        <View style={styles.tagRow}>
+          {announcement.tags.map((tag) => (
+            <Text key={tag} style={styles.tagChip}>{tag}</Text>
+          ))}
+        </View>
+
+        <Text style={styles.title}>{announcement.title}</Text>
+        <Text style={styles.summary}>{announcement.summary}</Text>
+
+        <View style={styles.bodyCard}>
+          <Text style={styles.body}>{announcement.body}</Text>
+        </View>
+
+        <View style={styles.infoCard}>
+          <Text style={styles.infoLabel}>Created by</Text>
+          <Text style={styles.infoValue}>{announcement.authorName}</Text>
+          <Text style={styles.infoLabel}>Audience</Text>
+          <Text style={styles.infoValue}>{announcement.audience.join(", ")}</Text>
+        </View>
+
+        <Pressable
+          style={[styles.signUpButton, hasSignedUp && styles.signUpButtonDone]}
+          onPress={() => !hasSignedUp && router.push({ pathname: "/announcements/[id]/signup", params: { id } })}
+          disabled={hasSignedUp || checkingSignup} >
+          <Text style={styles.signUpButtonText}>
+            {checkingSignup ? "Checking..." : hasSignedUp ? "Signed Up ✅" : "Sign Up for this Event"}
+          </Text>
+        </Pressable>
+      </View>
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  content: { gap: theme.spacing.lg },
+  badgeRow: { alignItems: "center", flexDirection: "row", gap: theme.spacing.sm },
+  badge: {
+    backgroundColor: theme.colors.accentSoft,
+    borderRadius: theme.radii.pill,
+    color: theme.colors.accent,
+    fontSize: 13, fontWeight: "700", overflow: "hidden",
+    paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.xs
+  },
+  meta: { color: theme.colors.textSecondary, fontSize: 14 },
+  title: { color: theme.colors.textPrimary, fontSize: 32, fontWeight: "800", lineHeight: 38 },
+  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm },
+  tagChip: {
+    backgroundColor: theme.colors.surface, borderColor: theme.colors.border,
+    borderRadius: theme.radii.pill, borderWidth: 1, color: theme.colors.textSecondary,
+    fontSize: 13, fontWeight: "700", overflow: "hidden",
+    paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.xs
+  },
+  summary: { color: theme.colors.textSecondary, fontSize: 17, lineHeight: 25 },
+  bodyCard: {
+    backgroundColor: theme.colors.surface, borderColor: theme.colors.border,
+    borderRadius: theme.radii.lg, borderWidth: 1, padding: theme.spacing.lg
+  },
+  body: { color: theme.colors.textPrimary, fontSize: 16, lineHeight: 26 },
+  infoCard: {
+    backgroundColor: theme.colors.card, borderRadius: theme.radii.lg,
+    gap: theme.spacing.xs, padding: theme.spacing.lg
+  },
+  infoLabel: { color: theme.colors.textSecondary, fontSize: 13, fontWeight: "700", textTransform: "uppercase" },
+  infoValue: { color: theme.colors.textPrimary, fontSize: 16, fontWeight: "600", marginBottom: theme.spacing.sm },
+  emptyState: {
+    backgroundColor: theme.colors.surface, borderColor: theme.colors.border,
+    borderRadius: theme.radii.lg, borderWidth: 1, gap: theme.spacing.sm, padding: theme.spacing.xl
+  },
+  emptyTitle: { color: theme.colors.textPrimary, fontSize: 24, fontWeight: "800" },
+  emptyBody: { color: theme.colors.textSecondary, fontSize: 16, lineHeight: 24 },
+
+  signUpButton: {
+    backgroundColor: theme.colors.accent,
+    borderRadius: theme.radii.pill,
+    alignItems: "center",
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.sm,
+  },
+  signUpButtonText: {
+    color: theme.colors.surface,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  signUpButtonDone: {
+    backgroundColor: theme.colors.brownDark,
+    color: theme.colors.brownText,
+    borderRadius: theme.radii.pill,
+    alignItems: "center",
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.sm,
+}});

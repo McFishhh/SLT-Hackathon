@@ -31,6 +31,7 @@ export default function RootLayout() {
             name="index"
             options={{
               title: "BigCommunity",
+              headerShown: false,
               headerRight: () => (
                 <Link href="./login" asChild>
                   <Pressable style={styles.headerButton}>
@@ -40,8 +41,9 @@ export default function RootLayout() {
               )
             }}
           />
-          <Stack.Screen name="announcements/index" options={{ title: "Announcements" }} />
-          <Stack.Screen name="announcements/[id]" options={{ title: "Announcement" }} />
+          
+          <Stack.Screen name="announcements" options={{ title: "Back" }} />
+          <Stack.Screen name="announcements/[id]" options={{ title: "Back" }} />
           <Stack.Screen name="profile" options={{ title: "Profile" }} />
           <Stack.Screen name="auth" options={{ title: "Authentication" }} />
           <Stack.Screen name="login" options={{ title: "Login" }} />

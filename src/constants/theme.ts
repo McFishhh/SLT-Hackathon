@@ -9,7 +9,9 @@ export const theme = {
     borderStrong: "#a98e77",
     textPrimary: "#1d1b18",
     textSecondary: "#5d564d",
-    textMuted: "#85796d"
+    textMuted: "#85796d",
+    brownDark: "#7a4f2d",  
+    brownText: "#f9f0e6"
   },
   spacing: {
     xs: 6,
