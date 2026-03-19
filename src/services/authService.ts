@@ -1,6 +1,6 @@
 import { FirebaseError } from "firebase/app";
 import { createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
-import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 
 import { firebaseAuth, firebaseDb } from "@/lib/firebase";
 import { UserLoginInput, UserProfile, UserRegistrationInput } from "@/types";
@@ -87,6 +87,28 @@ export const authService = {
       }
 
       return userProfile;
+    } catch (error) {
+      if (error instanceof Error && !(error instanceof FirebaseError)) {
+        throw error;
+      }
+
+      throw new Error(formatAuthError(error));
+    }
+  },
+
+  async updateUserInterests(userId: string, interests: string[]): Promise<UserProfile> {
+    try {
+      await updateDoc(doc(firebaseDb, "users", userId), {
+        interests
+      });
+
+      const updatedProfile = await this.getUserProfileById(userId);
+
+      if (!updatedProfile) {
+        throw new Error("Unable to refresh your profile after saving changes.");
+      }
+
+      return updatedProfile;
     } catch (error) {
       if (error instanceof Error && !(error instanceof FirebaseError)) {
         throw error;

@@ -30,6 +30,13 @@ export type UserLoginInput = {
   password: string;
 };
 
+export type CreateAnnouncementInput = {
+  title: string;
+  description: string;
+  tags: string[];
+  authorName: string;
+};
+
 export type Announcement = {
   id: string;
   title: string;

@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { AnnouncementCard } from "@/components/AnnouncementCard";
 import { Screen } from "@/components/Screen";
@@ -16,6 +17,12 @@ export default function AnnouncementsScreen() {
           <Text style={styles.subtitle}>
             A simple, scalable listing page for community-wide updates, notices, and event messages.
           </Text>
+
+          {state.currentUser?.role === "organiser" ? (
+            <Pressable onPress={() => router.push("/announcements/create" as never)} style={styles.createButton}>
+              <Text style={styles.createButtonText}>Create announcement</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         <View style={styles.list}>
@@ -46,6 +53,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     maxWidth: 720
+  },
+  createButton: {
+    alignSelf: "flex-start",
+    backgroundColor: theme.colors.accent,
+    borderRadius: theme.radii.pill,
+    marginTop: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm
+  },
+  createButtonText: {
+    color: theme.colors.surface,
+    fontSize: 14,
+    fontWeight: "800"
   },
   list: {
     gap: theme.spacing.lg
