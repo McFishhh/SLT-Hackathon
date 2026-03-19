@@ -1,15 +1,53 @@
 import { Link, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { onAuthStateChanged } from "firebase/auth";
 
 import { AppProvider } from "@/context/AppContext";
 import { theme } from "@/constants/theme";
+import { useAppContext } from "@/context/AppContext";
+import { firebaseAuth } from "@/lib/firebase";
+import { announcementService } from "@/services/announcementService";
+import { authService } from "@/services/authService";
+
+function AppBootstrap() {
+  const { setAnnouncements, setCurrentUser } = useAppContext();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser) => {
+      if (!firebaseUser) {
+        setCurrentUser(null);
+        setAnnouncements([]);
+        return;
+      }
+
+      try {
+        const [userProfile] = await Promise.all([
+          authService.getUserProfileById(firebaseUser.uid),
+          announcementService.ensureAnnouncementsBootstrapped()
+        ]);
+        const announcements = await announcementService.listAnnouncements();
+
+        setCurrentUser(userProfile);
+        setAnnouncements(announcements);
+      } catch (error) {
+        console.error("Failed to restore app session", error);
+      }
+    });
+
+    return unsubscribe;
+  }, [setAnnouncements, setCurrentUser]);
+
+  return null;
+}
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AppProvider>
+        <AppBootstrap />
         <StatusBar style="dark" />
         <Stack
           screenOptions={{

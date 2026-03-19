@@ -14,6 +14,7 @@ export type UserProfile = {
   email: string;
   role: UserRole;
   interests: string[];
+  signedUpEventIds: string[];
 };
 
 export type UserRegistrationInput = {
@@ -69,6 +70,7 @@ export type AppAction =
 export type AppContextValue = {
   state: AppState;
   dispatch: Dispatch<AppAction>;
+  setAnnouncements: (announcements: Announcement[]) => void;
   setSelectedAnnouncement: (announcementId: string | null) => void;
   setCurrentUser: (user: UserProfile | null) => void;
   setLoading: (isLoading: boolean) => void;

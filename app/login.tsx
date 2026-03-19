@@ -1,14 +1,16 @@
-import { Link, router } from "expo-router";
+import { Link, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { Screen } from "@/components/Screen";
 import { theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
+import { announcementService } from "@/services/announcementService";
 import { authService } from "@/services/authService";
 
 export default function LoginScreen() {
-  const { setCurrentUser, setLoading, state } = useAppContext();
+  const { redirectTo } = useLocalSearchParams<{ redirectTo?: string }>();
+  const { setAnnouncements, setCurrentUser, setLoading, state } = useAppContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -27,9 +29,12 @@ export default function LoginScreen() {
         email,
         password
       });
+      await announcementService.ensureAnnouncementsBootstrapped();
+      const announcements = await announcementService.listAnnouncements();
 
+      setAnnouncements(announcements);
       setCurrentUser(user);
-      router.replace("/");
+      router.replace((redirectTo || "/") as never);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Unable to log in right now.");
     } finally {
@@ -80,7 +85,13 @@ export default function LoginScreen() {
 
           <View style={styles.linkRow}>
             <Text style={styles.linkLabel}>Need an account?</Text>
-            <Link href="./register" style={styles.linkText}>
+            <Link
+              href={{
+                pathname: "/register",
+                params: redirectTo ? { redirectTo } : undefined
+              }}
+              style={styles.linkText}
+            >
               Register here
             </Link>
           </View>

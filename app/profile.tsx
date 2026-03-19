@@ -8,6 +8,13 @@ export default function ProfileScreen() {
   const { state } = useAppContext();
   const user = state.currentUser;
   const interests = user && user.interests.length > 0 ? user.interests.join(", ") : "No interests set";
+  const signedUpEvents =
+    user && user.signedUpEventIds.length > 0
+      ? state.announcements
+          .filter((announcement) => user.signedUpEventIds.includes(announcement.id))
+          .map((announcement) => announcement.title)
+          .join(", ")
+      : "No event signups yet";
 
   return (
     <Screen scrollEnabled>
@@ -24,6 +31,8 @@ export default function ProfileScreen() {
           <Text style={styles.value}>{user?.role ?? "Not assigned"}</Text>
           <Text style={styles.label}>Interests</Text>
           <Text style={styles.value}>{interests}</Text>
+          <Text style={styles.label}>Signed Up Events</Text>
+          <Text style={styles.value}>{signedUpEvents}</Text>
         </View>
       </View>
     </Screen>
