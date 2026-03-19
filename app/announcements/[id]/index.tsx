@@ -1,32 +1,98 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { checkIfSignedUp } from "@/services/signupService";
+import { useCallback, useState } from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+
+import { checkIfSignedUp, submitSignup } from "@/services/signupService";
 
 import { Screen } from "@/components/Screen";
 import { theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
 
 export default function AnnouncementDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { state } = useAppContext();
+  const { setCurrentUser, setLoading, state } = useAppContext();
   const router = useRouter();
 
-  const [hasSignedUp, setHasSignedUp] = useState(false);
+  const [hasSignedUp, setHasSignedUp] = useState(Boolean(id && state.currentUser?.signedUpEventIds.includes(id)));
   const [checkingSignup, setCheckingSignup] = useState(true);
+  const [hasCheckedSignup, setHasCheckedSignup] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       const check = async () => {
-        setCheckingSignup(true);
-        const result = await checkIfSignedUp(id, state.currentUser?.id ?? null);
-        setHasSignedUp(result);
-        setCheckingSignup(false);
+        if (!id) {
+          setHasSignedUp(false);
+          setCheckingSignup(false);
+          setHasCheckedSignup(true);
+          return;
+        }
+
+        if (state.currentUser?.signedUpEventIds.includes(id)) {
+          setHasSignedUp(true);
+          setCheckingSignup(false);
+          setHasCheckedSignup(true);
+          return;
+        }
+
+        try {
+          if (!hasCheckedSignup) {
+            setCheckingSignup(true);
+          }
+
+          const result = await checkIfSignedUp(id, state.currentUser?.id ?? null);
+          setHasSignedUp(result);
+        } catch (error) {
+          console.error("Unable to check signup status", error);
+          setHasSignedUp(false);
+        } finally {
+          setCheckingSignup(false);
+          setHasCheckedSignup(true);
+        }
       };
+
       check();
-    }, [id, state.currentUser?.id])
+    }, [hasCheckedSignup, id, state.currentUser?.id, state.currentUser?.signedUpEventIds])
   );
+
+  const handleSignup = async () => {
+    if (!id) {
+      return;
+    }
+
+    if (!state.currentUser) {
+      router.push({
+        pathname: "/login",
+        params: {
+          redirectTo: `/announcements/${id}`
+        }
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await submitSignup({
+        eventId: id,
+        name: state.currentUser.displayName,
+        email: state.currentUser.email,
+        userId: state.currentUser.id
+      });
+      setCurrentUser({
+        ...state.currentUser,
+        signedUpEventIds: state.currentUser.signedUpEventIds.includes(id)
+          ? state.currentUser.signedUpEventIds
+          : [...state.currentUser.signedUpEventIds, id]
+      });
+      setHasSignedUp(true);
+      Alert.alert("Signed up", "Your event signup has been confirmed.");
+    } catch (error) {
+      console.error("Unable to sign up for event", error);
+      Alert.alert("Signup failed", error instanceof Error ? error.message : "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const announcement = state.announcements.find((item) => item.id === id);
 
@@ -72,11 +138,24 @@ export default function AnnouncementDetailScreen() {
         </View>
 
         <Pressable
-          style={[styles.signUpButton, hasSignedUp && styles.signUpButtonDone]}
-          onPress={() => !hasSignedUp && router.push({ pathname: "/announcements/[id]/signup", params: { id } })}
-          disabled={hasSignedUp || checkingSignup} >
+          style={[
+            styles.signUpButton,
+            (hasSignedUp || checkingSignup || state.isLoading) && styles.signUpButtonDisabled,
+            hasSignedUp && styles.signUpButtonDone
+          ]}
+          onPress={handleSignup}
+          disabled={hasSignedUp || checkingSignup || state.isLoading}
+        >
           <Text style={styles.signUpButtonText}>
-            {checkingSignup ? "Checking..." : hasSignedUp ? "Signed Up ✅" : "Sign Up for this Event"}
+            {checkingSignup
+              ? "Checking..."
+              : hasSignedUp
+                ? "Signed Up"
+                : state.currentUser
+                  ? state.isLoading
+                    ? "Signing You Up..."
+                    : "Sign Up for this Event"
+                  : "Log In to Sign Up"}
           </Text>
         </Pressable>
       </View>
@@ -135,12 +214,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
   },
+  signUpButtonDisabled: {
+    opacity: 0.7
+  },
   signUpButtonDone: {
     backgroundColor: theme.colors.brownDark,
-    color: theme.colors.brownText,
-    borderRadius: theme.radii.pill,
-    alignItems: "center",
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    marginTop: theme.spacing.sm,
-}});
+  }
+});

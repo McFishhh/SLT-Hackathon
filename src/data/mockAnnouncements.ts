@@ -5,7 +5,8 @@ export const mockCurrentUser: UserProfile = {
   displayName: "Jamie Koh",
   email: "jamie@bigcommunity.app",
   role: "member",
-  interests: ["Events", "Family", "Wellness"]
+  interests: ["Events", "Family", "Wellness"],
+  signedUpEventIds: ["announce-001"]
 };
 
 export const mockAnnouncements: Announcement[] = [

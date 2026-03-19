@@ -10,5 +10,23 @@ service cloud.firestore {
       allow read, update: if request.auth != null
         && request.auth.uid == userId;
     }
+
+    match /events/{eventId}/signups/{signupId} {
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.email is string
+        && request.resource.data.name is string;
+
+      allow read: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+
+    match /announcements/{announcementId} {
+      allow read, create: if request.auth != null;
+    }
+
+    match /appMeta/{documentId} {
+      allow read, create: if request.auth != null;
+    }
   }
 }
