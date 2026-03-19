@@ -11,7 +11,7 @@ type AnnouncementCardProps = {
   showSummary?: boolean;
 };
 
-export function AnnouncementCard({ announcement, showSummary = false }: AnnouncementCardProps) {
+export function AnnouncementCard({ announcement, showSummary = true }: AnnouncementCardProps) {
   const { setSelectedAnnouncement, state } = useAppContext();
   const tagLabelMap = useMemo(() => new Map(state.tags.map((tag) => [tag.id, tag.label])), [state.tags]);
 
@@ -28,19 +28,22 @@ export function AnnouncementCard({ announcement, showSummary = false }: Announce
         style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       >
         <View style={styles.topRow}>
-          <Text style={styles.category}>{announcement.category}</Text>
+          <View style={styles.topMeta}>
+            <Text style={styles.category}>{announcement.category}</Text>
+
+            <View style={styles.tagRow}>
+              {announcement.tags.map((tagId) => (
+                <Text key={tagId} style={styles.tagChip}>
+                  {tagLabelMap.get(tagId) ?? tagId}
+                </Text>
+              ))}
+            </View>
+          </View>
+
           <Text style={styles.date}>{announcement.publishedAt}</Text>
         </View>
 
         <Text style={styles.title}>{announcement.title}</Text>
-
-        <View style={styles.tagRow}>
-          {announcement.tags.map((tagId) => (
-            <Text key={tagId} style={styles.tagChip}>
-              {tagLabelMap.get(tagId) ?? tagId}
-            </Text>
-          ))}
-        </View>
 
         {showSummary ? <Text style={styles.summary}>{announcement.summary}</Text> : null}
 
@@ -63,13 +66,20 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg
   },
   cardPressed: {
-    opacity: 0.92,
-    transform: [{ scale: 0.995 }]
+    opacity: 0.92
   },
   topRow: {
-    alignItems: "center",
+    alignItems: "flex-start",
     flexDirection: "row",
+    gap: theme.spacing.sm,
     justifyContent: "space-between"
+  },
+  topMeta: {
+    flex: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: theme.spacing.xs
   },
   category: {
     backgroundColor: theme.colors.accentSoft,

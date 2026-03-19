@@ -12,12 +12,22 @@ export default function SettingsScreen() {
   const { state, setCurrentUser, setLoading } = useAppContext();
   const user = state.currentUser;
   const [selectedTags, setSelectedTags] = useState<string[]>(user?.interests ?? []);
+  const [lastLoadedUserId, setLastLoadedUserId] = useState<string | null>(user?.id ?? null);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    setSelectedTags(user?.interests ?? []);
-  }, [user?.id, user?.interests]);
+    if (!user) {
+      setSelectedTags([]);
+      setLastLoadedUserId(null);
+      return;
+    }
+
+    if (user.id !== lastLoadedUserId) {
+      setSelectedTags(user.interests ?? []);
+      setLastLoadedUserId(user.id);
+    }
+  }, [lastLoadedUserId, user]);
 
   const toggleTag = (tagId: string) => {
     setSelectedTags((currentTags) =>
@@ -37,6 +47,7 @@ export default function SettingsScreen() {
 
       const updatedProfile = await authService.updateUserInterests(user.id, selectedTags);
       setCurrentUser(updatedProfile);
+      setSelectedTags(updatedProfile.interests ?? []);
       setSuccessMessage("Settings saved.");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Unable to save your settings right now.");

@@ -1,5 +1,5 @@
 import { Link } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { AnnouncementCard } from "@/components/AnnouncementCard";
@@ -7,7 +7,6 @@ import { Screen } from "@/components/Screen";
 import { TagSelector } from "@/components/TagSelector";
 import { theme } from "@/constants/theme";
 import { useAppContext } from "@/context/AppContext";
-import { announcementService } from "@/services/announcementService";
 import { Announcement, AnnouncementInput, TagId } from "@/types";
 
 function announcementToDraft(announcement: Announcement): AnnouncementInput {
@@ -27,37 +26,14 @@ export default function AnnouncementsScreen() {
   const canCreateAnnouncements = role === "organiser" || role === "admin";
   const canAdminManageAnnouncements = role === "admin";
 
-  const [visibleAnnouncements, setVisibleAnnouncements] = useState<Announcement[]>(state.announcements);
   const [editingAnnouncementId, setEditingAnnouncementId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<AnnouncementInput | null>(null);
   const [formError, setFormError] = useState("");
   const [formMessage, setFormMessage] = useState("");
-
-  const pageSubtitle = useMemo(() => {
-    if (canAdminManageAnnouncements) {
-      return "Admins can edit and delete any announcement while managing associated tags.";
-    }
-
-    if (role === "organiser" || role === "member") {
-      return "Showing announcements that match the tags you selected in your profile.";
-    }
-
-    return "A simple, scalable listing page for community-wide updates, notices, and event messages.";
-  }, [canAdminManageAnnouncements, role]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    announcementService.listAnnouncementsForUser(state.currentUser, state.announcements).then((roleVisible) => {
-      if (isMounted) {
-        setVisibleAnnouncements(roleVisible);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [state.announcements, state.currentUser]);
+  const visibleAnnouncements = state.announcements;
+  const pageSubtitle = canAdminManageAnnouncements
+    ? "Admins can edit and delete any announcement while managing associated tags."
+    : "See all community announcements in one place.";
 
   const toggleEditTag = (tagId: TagId) => {
     setEditDraft((currentDraft) => {
@@ -225,7 +201,7 @@ export default function AnnouncementsScreen() {
         ) : null}
 
         <View style={styles.list}>
-          <Text style={styles.sectionTitle}>{canAdminManageAnnouncements ? "All announcements" : "Relevant announcements"}</Text>
+          <Text style={styles.sectionTitle}>All announcements</Text>
           {visibleAnnouncements.length > 0 ? (
             visibleAnnouncements.map((announcement) => (
               <View key={announcement.id} style={styles.announcementItem}>
@@ -245,11 +221,7 @@ export default function AnnouncementsScreen() {
               </View>
             ))
           ) : (
-            <Text style={styles.emptyText}>
-              {state.currentUser
-                ? "No announcements match your selected tags yet."
-                : "No announcements are available right now."}
-            </Text>
+            <Text style={styles.emptyText}>No announcements are available right now.</Text>
           )}
         </View>
       </ScrollView>
