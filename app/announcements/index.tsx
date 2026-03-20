@@ -1,5 +1,5 @@
-import { Link } from "expo-router";
-import { useState } from "react";
+import { Link, useLocalSearchParams } from "expo-router";
+import { useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { AnnouncementCard } from "@/components/AnnouncementCard";
@@ -22,17 +22,35 @@ function announcementToDraft(announcement: Announcement): AnnouncementInput {
 
 export default function AnnouncementsScreen() {
   const { state, updateAnnouncement, deleteAnnouncement } = useAppContext();
+  const { view } = useLocalSearchParams<{ view?: string }>();
   const role = state.currentUser?.role;
   const canCreateAnnouncements = role === "organiser" || role === "admin";
   const canAdminManageAnnouncements = role === "admin";
+  const showAllAnnouncements = view === "all";
+  const shouldFilterByInterests = role === "member" && !showAllAnnouncements;
 
   const [editingAnnouncementId, setEditingAnnouncementId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<AnnouncementInput | null>(null);
   const [formError, setFormError] = useState("");
   const [formMessage, setFormMessage] = useState("");
-  const visibleAnnouncements = state.announcements;
+  const visibleAnnouncements = useMemo(() => {
+    if (!shouldFilterByInterests) {
+      return state.announcements;
+    }
+
+    const interestTags = new Set(state.currentUser?.interests ?? []);
+
+    return state.announcements.filter((announcement) => announcement.tags.some((tag) => interestTags.has(tag)));
+  }, [shouldFilterByInterests, state.announcements, state.currentUser?.interests]);
+
+  const emptyListMessage = shouldFilterByInterests
+    ? "No announcements match your current interests. Update your tags in Settings or show all announcements."
+    : "No announcements are available right now.";
+
   const pageSubtitle = canAdminManageAnnouncements
     ? "Admins can edit and delete any announcement while managing associated tags."
+    : shouldFilterByInterests
+    ? "Showing announcements that match your selected interests."
     : "See all community announcements in one place.";
 
   const toggleEditTag = (tagId: TagId) => {
@@ -110,7 +128,20 @@ export default function AnnouncementsScreen() {
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>Announcements</Text>
+          <View style={styles.headerTopRow}>
+            <Text style={styles.title}>Announcements</Text>
+            {role === "member" ? (
+              showAllAnnouncements ? (
+                <Link href="/announcements" style={styles.headerLink}>
+                  Show matched announcements
+                </Link>
+              ) : (
+                <Link href="/announcements?view=all" style={styles.headerLink}>
+                  Show all announcements
+                </Link>
+              )
+            ) : null}
+          </View>
           <Text style={styles.subtitle}>{pageSubtitle}</Text>
         </View>
 
@@ -221,7 +252,7 @@ export default function AnnouncementsScreen() {
               </View>
             ))
           ) : (
-            <Text style={styles.emptyText}>No announcements are available right now.</Text>
+            <Text style={styles.emptyText}>{emptyListMessage}</Text>
           )}
         </View>
       </ScrollView>
@@ -237,10 +268,21 @@ const styles = StyleSheet.create({
   header: {
     gap: theme.spacing.sm
   },
+  headerTopRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: theme.spacing.sm
+  },
   title: {
     color: theme.colors.textPrimary,
     fontSize: 30,
     fontWeight: "800"
+  },
+  headerLink: {
+    color: theme.colors.accent,
+    fontSize: 14,
+    fontWeight: "700"
   },
   subtitle: {
     color: theme.colors.textSecondary,

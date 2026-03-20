@@ -1,4 +1,4 @@
-import { Link, Stack } from "expo-router";
+import { Link, Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
@@ -84,6 +84,8 @@ function AppBootstrap() {
 }
 
 export default function RootLayout() {
+  const router = useRouter();
+
   return (
     <SafeAreaProvider>
       <AppProvider>
@@ -94,11 +96,18 @@ export default function RootLayout() {
             headerStyle: {
               backgroundColor: theme.colors.background
             },
+            headerBackVisible: false,
             headerShadowVisible: false,
             headerTintColor: theme.colors.textPrimary,
             contentStyle: {
               backgroundColor: theme.colors.background
             },
+            headerLeft: ({ canGoBack }) =>
+              canGoBack ? (
+                <Pressable onPress={() => router.back()} style={styles.backButton}>
+                  <Text style={styles.backButtonText}>{"< Back"}</Text>
+                </Pressable>
+              ) : null,
             headerTitleStyle: {
               fontSize: 18,
               fontWeight: "700"
@@ -145,5 +154,19 @@ const styles = StyleSheet.create({
     color: theme.colors.surface,
     fontSize: 14,
     fontWeight: "800"
+  },
+  backButton: {
+    alignItems: "center",
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radii.pill,
+    borderWidth: 1,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm
+  },
+  backButtonText: {
+    color: theme.colors.textPrimary,
+    fontSize: 14,
+    fontWeight: "700"
   }
 });
