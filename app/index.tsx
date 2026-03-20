@@ -11,6 +11,14 @@ import { authService } from "@/services/authService";
 
 export default function HomeScreen() {
   const { state, setCurrentUser, setLoading } = useAppContext();
+  const isMember = state.currentUser?.role === "member";
+
+  const filteredAnnouncements = isMember
+    ? state.announcements.filter((announcement) => {
+        const interestTags = new Set(state.currentUser?.interests ?? []);
+        return announcement.tags.some((tag) => interestTags.has(tag));
+      })
+    : state.announcements;
 
   const privilegeLabel = state.currentUser
     ? roleOptions.find((option) => option.value === state.currentUser?.role)?.label ?? "Member"
@@ -86,15 +94,29 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <SectionHeader title="Announcements" subtitle="See all announcements in one place." />
+        <View style={styles.announcementsHeader}>
+          <SectionHeader
+            title="Announcements"
+            subtitle={isMember ? "Showing announcements that match your selected interests." : "See all announcements in one place."}
+          />
+          {isMember ? (
+            <Pressable onPress={() => router.push("/announcements?view=all" as never)}>
+              <Text style={styles.showAllLink}>Show all announcements</Text>
+            </Pressable>
+          ) : null}
+        </View>
 
         <View style={styles.grid}>
-          {state.announcements.length > 0 ? (
-            state.announcements.map((announcement) => <AnnouncementCard key={announcement.id} announcement={announcement} />)
+          {filteredAnnouncements.length > 0 ? (
+            filteredAnnouncements.map((announcement) => <AnnouncementCard key={announcement.id} announcement={announcement} />)
           ) : (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No announcements yet</Text>
-              <Text style={styles.emptyBody}>There are no announcements available right now.</Text>
+              <Text style={styles.emptyTitle}>{isMember ? "No matching announcements" : "No announcements yet"}</Text>
+              <Text style={styles.emptyBody}>
+                {isMember
+                  ? "No announcements match your selected tags right now. You can still view everything via Show all announcements."
+                  : "There are no announcements available right now."}
+              </Text>
             </View>
           )}
         </View>
@@ -235,6 +257,17 @@ const styles = StyleSheet.create({
   },
   grid: {
     gap: theme.spacing.lg
+  },
+  announcementsHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: theme.spacing.md
+  },
+  showAllLink: {
+    color: theme.colors.accent,
+    fontSize: 14,
+    fontWeight: "700"
   },
   emptyCard: {
     backgroundColor: theme.colors.surface,
